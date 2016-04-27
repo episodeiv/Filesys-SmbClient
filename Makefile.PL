@@ -96,31 +96,20 @@ sub try_to_find {
 }
 
 sub find_path {
-  my @ext;
-  if($_[0]=~m!\.h$!) {
-    push(@ext, "include", "include/samba-4.0");
-  } else {
-    push(@ext, ( $ENV{HOSTTYPE}=~m!x86_64! ? "lib64" : "lib"));
-  }
+  my $ext = ($_[0]=~m!\.h$! ? "include" : ( $ENV{HOSTTYPE}=~m!x86_64! ? "lib64" : "lib"));
   my $defaultsDir = { "/usr" => 1,
 		      "/usr/local" => 1,
 		      "/usr/local/samba" => 1,
 		      "/usr/local/samba3" => 1 };
   my @pa = split(/:/, $ENV{PATH});
   my @path;
-  foreach my $p(@pa) {
-    $p=~s!/bin!/!;
-    $p=~s!//!/!g;
-    $p=~s!/$!!g;
-    for my $e(@ext) {
-      push(@path, $p."/$e");
-    }
+  foreach (@pa) {
+    s/bin//;
+    s!//!/!g;
+    s!/$!!g;
+    push(@path, $_."/$ext") if !$defaultsDir->{$_};
   }
-  foreach my $dir(keys %defaultsDir) {
-    foreach my $e(@ext) {
-      push(@path, $dir."/$e");
-    }
-  }
+  foreach (keys %$defaultsDir) { push(@path, $_."/$ext"); }
   print "I search in: ",(join "\n", @path),"\n";
   return @path;
 }
