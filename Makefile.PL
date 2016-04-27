@@ -110,6 +110,18 @@ sub find_path {
     push(@path, $_."/$ext") if !$defaultsDir->{$_};
   }
   foreach (keys %$defaultsDir) { push(@path, $_."/$ext"); }
+
+  ## get default paths from pkg-config
+  my $pkgconfig;
+  if($_[0]=~m!\.h$!) {
+    $pkgconfig = qx/pkg-config --variable=includedir smbclient/;
+  }
+  else {
+    $pkgconfig = qx/pkg-config --variable=libdir smbclient/;
+  }
+  $pkgconfig =~ s/\n//g;
+  push(@path, $pkgconfig);
+
   print "I search in: ",(join "\n", @path),"\n";
   return @path;
 }
